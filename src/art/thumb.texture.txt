@@ -1,0 +1,3 @@
+primary=thumb.jpg
+tile=none
+MipFilter=none

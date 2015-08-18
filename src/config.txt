@@ -1,0 +1,33 @@
+﻿
+username                                "LSE Log Library"
+trainz-build                            3.4
+category-class                          "YL"
+category-region                         "BY;EE;KZ;LT;LV;RU;SU;UA"
+category-era                            "1970s;1980s;1990s;2000s;2010s"
+kind                                    "library"
+author                                  "Mike Krasnenkov"
+contact-email                           "mikekrasnenkov@mail.ru"
+license                                 "This work is available under the Creative Commons Attribution-ShareAlike License.
+http://creativecommons.org/licenses/by-sa/3.0/"
+script                                  "lse.log.library.gs"
+class                                   "LseLogLibrary"
+description                             "Logging facade for GameScript libraries"
+
+thumbnails
+{
+  0
+  {
+    image                               "art/thumb.jpg"
+    width                               240
+    height                              180
+  }
+}
+
+script-include-table
+{
+}
+kuid                                    <kuid:298469:1000001>
+
+kuid-table
+{
+}
