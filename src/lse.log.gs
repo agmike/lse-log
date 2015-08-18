@@ -110,7 +110,7 @@ class LLog isclass GSObject
             <Log Initiators>
     */
     final public void Log(string message);
-    final public void Log(Soup data);
+    final public void Log(string message, Soup data);
 
 
     // ****************************************************
@@ -119,6 +119,15 @@ class LLog isclass GSObject
     //
     // ****************************************************
 
+    public LLogSubscription[] Subscriptions = null;
+    public int MinimumLogLevel = LLog.ALL;
+
+    final int Initialize() {
+        LLogLibraryStatic.GetInstance().AddLogger(me);
+        return LLog.ERROR;
+    }
+
+    int nextLogLevel = Initialize();
 
     public string GetScope()
     {
@@ -128,36 +137,88 @@ class LLog isclass GSObject
 
     final public bool Trace()
     {
+        if (TRACE < MinimumLogLevel)
+            return false;
+        int i;
+        for (i = 0; i < Subscriptions.size(); ++i) {
+            LLogSubscription sub = Subscriptions[i];
+            if (TRACE >= sub.MinimumLogLevel) {
+                nextLogLevel = TRACE;
+                return true;
+            }
+        }
         return false;
     }
 
 
     final public bool Info()
     {
+        if (INFO < MinimumLogLevel)
+            return false;
+        int i;
+        for (i = 0; i < Subscriptions.size(); ++i) {
+            LLogSubscription sub = Subscriptions[i];
+            if (INFO >= sub.MinimumLogLevel) {
+                nextLogLevel = INFO;
+                return true;
+            }
+        }
         return false;
     }
 
 
     final public bool Warn()
     {
+        if (WARN < MinimumLogLevel)
+            return false;
+        int i;
+        for (i = 0; i < Subscriptions.size(); ++i) {
+            LLogSubscription sub = Subscriptions[i];
+            if (WARN >= sub.MinimumLogLevel) {
+                nextLogLevel = WARN;
+                return true;
+            }
+        }
         return false;
     }
 
 
     final public bool Error()
     {
+        if (ERROR < MinimumLogLevel)
+            return false;
+        int i;
+        for (i = 0; i < Subscriptions.size(); ++i) {
+            LLogSubscription sub = Subscriptions[i];
+            if (ERROR >= sub.MinimumLogLevel) {
+                nextLogLevel = ERROR;
+                return true;
+            }
+        }
         return false;
     }
 
 
     final public void Log(string message)
     {
-
+        Log(message, null);
     }
 
-
-    final public void Log(Soup data)
+    final public void Log(string message, Soup data)
     {
+        LLogRecord record = new LLogRecord();
+        record.Level = nextLogLevel;
+        record.Scope = GetScope();
+        record.Source = Router.GetCurrentThreadGameObject();
+        record.Message = message;
+        record.Data = data;
 
+        int i;
+        for (i = 0; i < Subscriptions.size(); ++i) {
+            LLogSubscription sub = Subscriptions[i];
+            if (record.Level >= sub.MinimumLogLevel) {
+                sub.Listener.Accept(record);
+            }
+        }
     }
 };
