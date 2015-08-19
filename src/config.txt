@@ -1,17 +1,20 @@
 ﻿
+kuid                                    <kuid:298469:1000006>
 username                                "LSE Log Library"
+script                                  "lse.log.library.gs"
+class                                   "LLogLibrary"
+description                             "Logging facade for GameScript libraries"
 trainz-build                            3.4
 category-class                          "YL"
 category-region                         "BY;EE;KZ;LT;LV;RU;SU;UA"
 category-era                            "1970s;1980s;1990s;2000s;2010s"
 kind                                    "library"
 author                                  "Mike Krasnenkov"
+organisation                            "TSM Team"
 contact-email                           "mikekrasnenkov@mail.ru"
-license                                 "This work is available under the Creative Commons Attribution-ShareAlike License.
-http://creativecommons.org/licenses/by-sa/3.0/"
-script                                  "lse.log.library.gs"
-class                                   "LseLogLibrary"
-description                             "Logging facade for GameScript libraries"
+contact-website                         "http://tsmteam.ru"
+license                                 "Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+Full legal code: http://creativecommons.org/licenses/by-sa/4.0/legalcode"
 
 thumbnails
 {
@@ -26,7 +29,6 @@ thumbnails
 script-include-table
 {
 }
-kuid                                    <kuid:298469:1000001>
 
 kuid-table
 {
