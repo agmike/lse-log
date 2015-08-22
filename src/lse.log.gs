@@ -3,7 +3,6 @@ include "library.gs"
 
 include "lse.log.gs"
 include "lse.log.filter.gs"
-include "lse.log.formatter.gs"
 include "lse.log.logger.gs"
 include "lse.log.loglistener.gs"
 include "lse.log.logrecord.gs"
@@ -17,6 +16,7 @@ class LLogLibrary isclass Library {
     public void AddLogger(LLogger logger);
     public void Subscribe(LLogListener listener, string scope, int minLogLevel);
     public void Unsubscribe(LLogListener listener, string scope);
+    public void SetFilter(LLogListener listener, LLogFilter filter);
 
 
     // ****************************************************
@@ -103,6 +103,11 @@ class LLogLibrary isclass Library {
                 }
             }
         }
+    }
+
+    public void SetFilter(LLogListener listener, LLogFilter filter)
+    {
+
     }
 
     public Soup GetProperties()
