@@ -132,6 +132,9 @@ class LLogLibrary isclass Library {
     public void Init(Asset asset) {
         inherited(asset);
 
+        rootScope = new LLogScope();
+        listeners = new LLogListenerData[0];
+
         AddHandler(me, "LseLogLibrary-298469", "FlushMessage", "OnFlushMessage");
     }
 };
