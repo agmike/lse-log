@@ -4,9 +4,11 @@ include "library.gs"
 include "lse.log.gs"
 include "lse.log.filter.gs"
 include "lse.log.logger.gs"
+include "lse.log.loggerdata.gs"
 include "lse.log.loglistener.gs"
+include "lse.log.loglistenerdata.gs"
 include "lse.log.logrecord.gs"
-include "lse.log.subscription.gs"
+include "lse.log.scope.gs"
 
 include "lse.log.static.gs"
 
@@ -14,7 +16,6 @@ include "lse.log.static.gs"
 class LLogLibrary isclass Library {
 
     public void AddListener(LLogListener listener, string scope, int minLogLevel);
-    public void RemoveListener(LLogListener listener);
     public void SetFilter(LLogListener listener, LLogFilter filter);
 
 
@@ -24,55 +25,93 @@ class LLogLibrary isclass Library {
     //
     // ****************************************************
 
-    LLoggerData[] loggers = new LLoggerData[0];
-    LLoggerData loggerWithNextMessage = null;
+    LLogScope rootScope;
+
+    LLogRecord nextMessage = null;
+    LLogScope nextMessageScope = null;
+
+    int listenerVisitMark = 0;
+
+    LLogListenerData[] listeners;
+
+    final LLogListenerData GetListenerData(LLogListener listener)
+    {
+        int i;
+        for (i = 0; i < listeners.size(); ++i) {
+            if (listener == listeners[i].Listener) {
+                return listeners[i];
+            }
+        }
+        listeners[i] = new LLogListenerData();
+        listeners[i].Listener = listener;
+        return listeners[i];
+    }
 
     public void AddListener(LLogListener listener, string scope, int minLogLevel)
     {
-
-    }
-
-    public void RemoveListener(LLogListener listener)
-    {
-
+        rootScope.GetScope(scope).AddListener(GetListenerData(listener), minLogLevel);
     }
 
     public void SetFilter(LLogListener listener, LLogFilter filter)
     {
-
+        GetListenerData(listener).Filter = filter;
     }
 
     public LLoggerData InitLogger(string scope)
     {
         if (!scope) return null;
-        LLoggerData loggerData = new LLoggerData();
-        loggerData.Scope = scope;
-        //UpdateSubscriptions(loggerData);
-        return loggerData;
+        LLoggerData data = new LLoggerData();
+        data.Init(rootScope.GetScope(scope), scope);
+        return data;
     }
 
-    public void PrepareMessage(LLoggerData loggerData, int level)
+    public void FlushMessage()
     {
-        PostMessage(me, "LseLogLibrary-298469", "FlushMessages", 0.0);
-    }
+        ClearMessages("LseLogLibrary-298469", "FlushMessage");
 
-    public void FlushMessages()
-    {
-        ClearMessages("LseLogLibrary-298469", "FlushMessages");
+        if (!nextMessage)
+            return;
 
-        LLoggerData loggerData = loggerWithNextMessage;
-        loggerWithNextMessage = null;
+        LLogRecord record = nextMessage;
+        nextMessage = null;
+        LLogScope scope = nextMessageScope;
+        nextMessageScope = null;
 
-        LLogRecord record = loggerData.MessageRecord;
-        loggerData.MessageRecord = null;
-
-        int j;
-        for (j = 0; j < loggerData.Subscriptions.size(); ++j) {
-            LLogSubscription sub = loggerData.Subscriptions[j];
-            if (record.Level >= sub.MinimumLogLevel) {
-                sub.Listener.Accept(record);
+        int mark = ++listenerVisitMark;
+        while (true) {
+            int i;
+            if (scope.Listeners) {
+                for (i = 0; i < scope.Listeners.size(); ++i) {
+                    LLogListenerData listener = scope.Listeners[i];
+                    if (listener.Mark != mark) {
+                        listener.Mark = mark;
+                        if (!listener.Filter or listener.Filter.Accepts(record))
+                            listener.Listener.Accept(record);
+                    }
+                }
             }
+            scope = scope.Parent;
         }
+
+        record.Scope = null;
+        record.Source = null;
+        record.Message = null;
+        record.Data = null;
+    }
+
+    public void PrepareMessage(int level, LLogScope scope, string scopeName)
+    {
+        FlushMessage();
+
+        nextMessageScope = scope;
+        nextMessage = new LLogRecord();
+        nextMessage.Level = level;
+        nextMessage.Scope = Str.CloneString(scopeName);
+        nextMessage.Source = Router.GetCurrentThreadGameObject();
+        nextMessage.Message = "";
+        nextMessage.Data = null;
+
+        PostMessage(me, "LseLogLibrary-298469", "FlushMessage", 0.0);
     }
 
     public Soup GetProperties()
@@ -85,14 +124,14 @@ class LLogLibrary isclass Library {
         inherited(sp);
     }
 
-    void OnFlushMessages(Message msg)
+    void OnFlushMessage(Message msg)
     {
-        FlushMessages();
+        FlushMessage();
     }
 
     public void Init(Asset asset) {
         inherited(asset);
 
-        AddHandler(me, "LseLogLibrary-298469", "FlushMessages", "OnFlushMessages");
+        AddHandler(me, "LseLogLibrary-298469", "FlushMessage", "OnFlushMessage");
     }
 };
