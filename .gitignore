@@ -1,4 +1,5 @@
 .atomenv.*
+.atom-build.*
 /out/*
 
 ### Windows ###
