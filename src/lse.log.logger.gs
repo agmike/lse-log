@@ -1,14 +1,14 @@
 
 include "lse.log.library.gs"
 
-/*  Class: LLog
+/*  Class: LLogger
 
     Logger facade. Logs submitted to instance of this class are
 
     Example:
 
         (code)
-        static class MyClassLogger isclass LLog
+        static class MyClassLogger isclass LLogger
         {
             public string GetScope()
             {
@@ -28,10 +28,8 @@ include "lse.log.library.gs"
         (end)
 
     See Also:
-
-        <LLogStatic>
 */
-class LLog isclass GSObject
+class LLogger isclass GSObject
 {
     /*  Constants: Log Levels
 
@@ -109,8 +107,8 @@ class LLog isclass GSObject
 
             <Log Initiators>
     */
-    final public void Log(string message);
-    final public void Log(string message, Soup data);
+    final public LLogger Log(string message);
+    final public LLogger Log(string message, Soup data);
 
 
     // ****************************************************
@@ -120,11 +118,11 @@ class LLog isclass GSObject
     // ****************************************************
 
     public LLogSubscription[] Subscriptions = null;
-    public int MinimumLogLevel = LLog.ALL;
+    public int MinimumLogLevel = LLogger.ALL;
 
     final int Initialize() {
         LLogLibraryStatic.GetInstance().AddLogger(me);
-        return LLog.ERROR;
+        return LLogger.ERROR;
     }
 
     int nextLogLevel = Initialize();
@@ -137,7 +135,7 @@ class LLog isclass GSObject
 
     final public bool Trace()
     {
-        if (TRACE < MinimumLogLevel)
+        if (TRACE < MinimumLogLevel or !Subscriptions)
             return false;
         int i;
         for (i = 0; i < Subscriptions.size(); ++i) {
@@ -147,13 +145,13 @@ class LLog isclass GSObject
                 return true;
             }
         }
-        return false;
+        return true;
     }
 
 
     final public bool Info()
     {
-        if (INFO < MinimumLogLevel)
+        if (INFO < MinimumLogLevel or !Subscriptions)
             return false;
         int i;
         for (i = 0; i < Subscriptions.size(); ++i) {
@@ -169,7 +167,7 @@ class LLog isclass GSObject
 
     final public bool Warn()
     {
-        if (WARN < MinimumLogLevel)
+        if (WARN < MinimumLogLevel or !Subscriptions)
             return false;
         int i;
         for (i = 0; i < Subscriptions.size(); ++i) {
@@ -185,7 +183,7 @@ class LLog isclass GSObject
 
     final public bool Error()
     {
-        if (ERROR < MinimumLogLevel)
+        if (ERROR < MinimumLogLevel or !Subscriptions)
             return false;
         int i;
         for (i = 0; i < Subscriptions.size(); ++i) {
@@ -199,12 +197,13 @@ class LLog isclass GSObject
     }
 
 
-    final public void Log(string message)
+    final public LLogger Log(string message)
     {
         Log(message, null);
+        return me;
     }
 
-    final public void Log(string message, Soup data)
+    final public LLogger Log(string message, Soup data)
     {
         LLogRecord record = new LLogRecord();
         record.Level = nextLogLevel;
@@ -220,5 +219,7 @@ class LLog isclass GSObject
                 sub.Listener.Accept(record);
             }
         }
+
+        return me;
     }
 };
