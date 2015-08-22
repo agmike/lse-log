@@ -13,9 +13,8 @@ include "lse.log.static.gs"
 
 class LLogLibrary isclass Library {
 
-    public void AddLogger(LLogger logger);
-    public void Subscribe(LLogListener listener, string scope, int minLogLevel);
-    public void Unsubscribe(LLogListener listener, string scope);
+    public void AddListener(LLogListener listener, string scope, int minLogLevel);
+    public void RemoveListener(LLogListener listener);
     public void SetFilter(LLogListener listener, LLogFilter filter);
 
 
@@ -25,89 +24,55 @@ class LLogLibrary isclass Library {
     //
     // ****************************************************
 
-    LLogger[] loggers = new LLogger[50];
-    LLogListener[] listeners = new LLogListener[50];
+    LLoggerData[] loggers = new LLoggerData[0];
+    LLoggerData loggerWithNextMessage = null;
 
-    public void AddLogger(LLogger logger)
+    public void AddListener(LLogListener listener, string scope, int minLogLevel)
     {
-        Interface.Log("adding logger");
-        loggers[loggers.size()] = logger;
+
     }
 
-    public void Subscribe(LLogListener listener, string scope, int minLogLevel)
+    public void RemoveListener(LLogListener listener)
     {
-        Interface.Log("adding subscription");
-        int i;
-        for (i = 0; i < loggers.size(); ++i) {
-            LLogger logger = loggers[i];
-            if (LLogLibraryStatic.ScopeMatches(logger.GetScope(), scope)) {
 
-                // Adding listener to logger subscriptions
-                LLogSubscription subscription = null;
-                if (logger.Subscriptions) {
-                    int j;
-                    for (j = 0; j < logger.Subscriptions.size(); ++j) {
-                        LLogSubscription sub = logger.Subscriptions[j];
-                        if (sub.Listener == listener) {
-                            subscription = sub;
-                            break;
-                        }
-                    }
-                }
-                else {
-                    logger.Subscriptions = new LLogSubscription[1];
-                    logger.Subscriptions[0] = subscription = new LLogSubscription();
-                }
-
-                if (!subscription) {
-                    subscription = new LLogSubscription();
-                    logger.Subscriptions[logger.Subscriptions.size()] = subscription;
-                }
-
-                subscription.Listener = listener;
-                subscription.MinimumLogLevel = minLogLevel;
-
-                // Updating logger minimum log level
-                logger.MinimumLogLevel = LLogger.NONE;
-                int j;
-                for (j = 0; j < logger.Subscriptions.size(); ++j) {
-                    LLogSubscription sub = logger.Subscriptions[j];
-                    logger.MinimumLogLevel = Math.Min(logger.MinimumLogLevel, sub.MinimumLogLevel);
-                }
-            }
-        }
-    }
-
-    public void Unsubscribe(LLogListener listener, string scope)
-    {
-        int i;
-        for (i = 0; i < loggers.size(); ++i) {
-            LLogger logger = loggers[i];
-            if (LLogLibraryStatic.ScopeMatches(logger.GetScope(), scope)) {
-
-                // Removing listener from logger subscriptions
-                int j;
-                for (j = 0; j < logger.Subscriptions.size(); ++j) {
-                    LLogSubscription sub = logger.Subscriptions[j];
-                    if (sub.Listener == listener) {
-                        logger.Subscriptions[j, j + 1] = null;
-                        break;
-                    }
-                }
-
-                // Updating logger minimum log level
-                logger.MinimumLogLevel = LLogger.NONE;
-                for (j = 0; j < logger.Subscriptions.size(); ++j) {
-                    LLogSubscription sub = logger.Subscriptions[j];
-                    logger.MinimumLogLevel = Math.Min(logger.MinimumLogLevel, sub.MinimumLogLevel);
-                }
-            }
-        }
     }
 
     public void SetFilter(LLogListener listener, LLogFilter filter)
     {
 
+    }
+
+    public LLoggerData InitLogger(string scope)
+    {
+        if (!scope) return null;
+        LLoggerData loggerData = new LLoggerData();
+        loggerData.Scope = scope;
+        //UpdateSubscriptions(loggerData);
+        return loggerData;
+    }
+
+    public void PrepareMessage(LLoggerData loggerData, int level)
+    {
+        PostMessage(me, "LseLogLibrary-298469", "FlushMessages", 0.0);
+    }
+
+    public void FlushMessages()
+    {
+        ClearMessages("LseLogLibrary-298469", "FlushMessages");
+
+        LLoggerData loggerData = loggerWithNextMessage;
+        loggerWithNextMessage = null;
+
+        LLogRecord record = loggerData.MessageRecord;
+        loggerData.MessageRecord = null;
+
+        int j;
+        for (j = 0; j < loggerData.Subscriptions.size(); ++j) {
+            LLogSubscription sub = loggerData.Subscriptions[j];
+            if (record.Level >= sub.MinimumLogLevel) {
+                sub.Listener.Accept(record);
+            }
+        }
     }
 
     public Soup GetProperties()
@@ -120,7 +85,14 @@ class LLogLibrary isclass Library {
         inherited(sp);
     }
 
+    void OnFlushMessages(Message msg)
+    {
+        FlushMessages();
+    }
+
     public void Init(Asset asset) {
         inherited(asset);
+
+        AddHandler(me, "LseLogLibrary-298469", "FlushMessages", "OnFlushMessages");
     }
 };

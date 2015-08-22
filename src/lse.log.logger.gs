@@ -1,6 +1,8 @@
 
 include "lse.log.gs"
 
+include "lse.log.logger.data.gs"
+
 /*  Class: LLogger
 
     Logger facade. Logs submitted to instance of this class are
@@ -43,32 +45,37 @@ class LLogger isclass GSObject
             disabling logging entirely.
     */
     define public int ALL   = -100;
-    define public int TRACE = 1;
-    define public int INFO  = 2;
-    define public int WARN  = 3;
-    define public int ERROR = 4;
+    define public int TRACE = 0;
+    define public int DEBUG = 10; // TODO: implement this
+    define public int INFO  = 20;
+    define public int WARN  = 30;
+    define public int ERROR = 40;
     define public int NONE  = 100;
 
     /*  Func: GetScope
 
         Returns log scope of current instance.
+    */
+    final public string GetScope();
+
+    /*  Func: S
+
         Must be overridden to provide scope for class which is using this log.
         Recommended format is Java-like package name.
+
+        This function is called one when intializing this logger.
 
         Example:
 
             (code)
-            public string GetScope()
-            {
-                return "tram.xpath.router"
-            }
+            string S() { return "tram.xpath.router"; }
             (end)
 
         Returns:
 
-            String containing scope name.
+            Non-null string containing scope name.
     */
-    public string GetScope();
+    string S() { return ""; }
 
     /*  Funcs: Log Initiators
 
@@ -107,8 +114,11 @@ class LLogger isclass GSObject
 
             <Log Initiators>
     */
-    final public LLogger Log(string message);
-    final public LLogger Log(string message, Soup data);
+    final public LLogger P(string message);
+    final public LLogger P(Soup data);
+
+    /// Finishes log message and handle it to listeners.
+    final public void F();
 
 
     // ****************************************************
@@ -117,31 +127,25 @@ class LLogger isclass GSObject
     //
     // ****************************************************
 
-    public LLogSubscription[] Subscriptions = null;
-    public int MinimumLogLevel = LLogger.ALL;
-
-    final int Initialize() {
-        LLogLibraryStatic.GetInstance().AddLogger(me);
-        return LLogger.ERROR;
+    final LLoggerData Init() {
+        return LLogLibraryStatic.GetInstance().InitLogger(S());
     }
 
-    int nextLogLevel = Initialize();
+    LLoggerData data = Init();
 
-    public string GetScope()
-    {
-        return "";
-    }
+    final public string GetScope() { return data.Scope; }
 
 
     final public bool Trace()
     {
-        if (TRACE < MinimumLogLevel or !Subscriptions)
+        if (TRACE < data.MinimumLogLevel or !data.Subscriptions)
             return false;
+        LLogSubscription[] subscriptions = data.Subscriptions;
         int i;
-        for (i = 0; i < Subscriptions.size(); ++i) {
-            LLogSubscription sub = Subscriptions[i];
+        for (i = 0; i < subscriptions.size(); ++i) {
+            LLogSubscription sub = subscriptions[i];
             if (TRACE >= sub.MinimumLogLevel) {
-                nextLogLevel = TRACE;
+                LLogLibraryStatic.GetInstance().PrepareMessage(data, TRACE);
                 return true;
             }
         }
@@ -151,13 +155,14 @@ class LLogger isclass GSObject
 
     final public bool Info()
     {
-        if (INFO < MinimumLogLevel or !Subscriptions)
+        if (INFO < data.MinimumLogLevel or !data.Subscriptions)
             return false;
+        LLogSubscription[] subscriptions = data.Subscriptions;
         int i;
-        for (i = 0; i < Subscriptions.size(); ++i) {
-            LLogSubscription sub = Subscriptions[i];
+        for (i = 0; i < subscriptions.size(); ++i) {
+            LLogSubscription sub = subscriptions[i];
             if (INFO >= sub.MinimumLogLevel) {
-                nextLogLevel = INFO;
+                LLogLibraryStatic.GetInstance().PrepareMessage(data, INFO);
                 return true;
             }
         }
@@ -167,13 +172,14 @@ class LLogger isclass GSObject
 
     final public bool Warn()
     {
-        if (WARN < MinimumLogLevel or !Subscriptions)
+        if (WARN < data.MinimumLogLevel or !data.Subscriptions)
             return false;
+        LLogSubscription[] subscriptions = data.Subscriptions;
         int i;
-        for (i = 0; i < Subscriptions.size(); ++i) {
-            LLogSubscription sub = Subscriptions[i];
+        for (i = 0; i < subscriptions.size(); ++i) {
+            LLogSubscription sub = subscriptions[i];
             if (WARN >= sub.MinimumLogLevel) {
-                nextLogLevel = WARN;
+                LLogLibraryStatic.GetInstance().PrepareMessage(data, WARN);
                 return true;
             }
         }
@@ -183,13 +189,14 @@ class LLogger isclass GSObject
 
     final public bool Error()
     {
-        if (ERROR < MinimumLogLevel or !Subscriptions)
+        if (ERROR < data.MinimumLogLevel or !data.Subscriptions)
             return false;
+        LLogSubscription[] subscriptions = data.Subscriptions;
         int i;
-        for (i = 0; i < Subscriptions.size(); ++i) {
-            LLogSubscription sub = Subscriptions[i];
+        for (i = 0; i < subscriptions.size(); ++i) {
+            LLogSubscription sub = subscriptions[i];
             if (ERROR >= sub.MinimumLogLevel) {
-                nextLogLevel = ERROR;
+                LLogLibraryStatic.GetInstance().PrepareMessage(data, ERROR);
                 return true;
             }
         }
@@ -197,29 +204,25 @@ class LLogger isclass GSObject
     }
 
 
-    final public LLogger Log(string message)
+    final public LLogger P(string message)
     {
-        Log(message, null);
+        data.MessageRecord.Message[data.MessageRecord.Message.size(), ] = message;
         return me;
     }
 
-    final public LLogger Log(string message, Soup data)
+    final public LLogger P(Soup sp)
     {
-        LLogRecord record = new LLogRecord();
-        record.Level = nextLogLevel;
-        record.Scope = GetScope();
-        record.Source = Router.GetCurrentThreadGameObject();
-        record.Message = message;
-        record.Data = data;
-
-        int i;
-        for (i = 0; i < Subscriptions.size(); ++i) {
-            LLogSubscription sub = Subscriptions[i];
-            if (record.Level >= sub.MinimumLogLevel) {
-                sub.Listener.Accept(record);
-            }
-        }
-
+        // TODO:
+        // if (!data.MessageRecord.Data)
+        //     data.MessageRecord = sp;
+        // else
+        //     LData.Append(data.MessageRecord.Data, sp);
+        data.MessageRecord.Data = sp;
         return me;
+    }
+
+    final public void F()
+    {
+        LLogLibraryStatic.GetInstance().FlushMessages();
     }
 };
