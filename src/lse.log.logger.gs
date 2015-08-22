@@ -33,22 +33,23 @@ class LLogger isclass GSObject
 {
     /*  Constants: Log Levels
 
-        ALL - Pseudo-level that is lower than any other level, used for
+        ALL - Pseudo-level that is higher than any other level, used for
             enabling all messages.
         TRACE - Level for detailed logging.
-        INFO - Level for providing useful information.
+        DEBUG - Level for providing debug information.
+        INFO - Level for providing useful information to user.
         WARN - Level for warnings about incorrect usage.
         ERROR - Level for unexpected situations and errors.
-        NONE - Pseudo-level that is higher than any other level, used for
+        NONE - Pseudo-level that is lower than any other level, used for
             disabling logging entirely.
     */
-    define public int ALL   = -100;
-    define public int TRACE = 0;
-    define public int DEBUG = 10; // TODO: implement this
-    define public int INFO  = 20;
-    define public int WARN  = 30;
-    define public int ERROR = 40;
-    define public int NONE  = 100;
+    define public int NONE  = -100;
+    define public int ERROR = 0;
+    define public int WARN  = 1;
+    define public int INFO  = 2;
+    define public int DEBUG = 3;
+    define public int TRACE = 4;
+    define public int ALL   = 100;
 
     // /*  Func: GetScope
     //
@@ -153,6 +154,7 @@ class LLogger isclass GSObject
 
     final public void F()
     {
+        record = null;
         LLogLibraryStatic.GetInstance().FlushMessage();
     }
 };

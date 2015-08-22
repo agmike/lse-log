@@ -5,17 +5,17 @@ include "lse.log.gs"
 class LLogScope isclass GSObject
 {
     public string Name = "";
-    public LLogScope Parent;
-    public LLogScope[] Children;
-    public LLogScope Exact;
+    public LLogScope Parent = null;
+    public LLogScope[] Children = null;
+    public LLogScope Exact = null;
 
-    public int MinimumLogLevel = LLogger.NONE;
+    public int MaxLogLevel = LLogger.NONE;
 
-    public LLogListenerData[] Listeners;
+    public LLogListenerData[] Listeners = null;
 
-    public void AddListener(LLogListenerData listener, int minLogLevel)
+    public void AddListener(LLogListenerData listener, int maxLogLevel)
     {
-        MinimumLogLevel = Math.Min(MinimumLogLevel, minLogLevel);
+        MaxLogLevel = Math.Max(MaxLogLevel, maxLogLevel);
         if (!Listeners) {
             Listeners = new LLogListenerData[1];
             Listeners[0] = listener;

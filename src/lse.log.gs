@@ -15,7 +15,7 @@ include "lse.log.static.gs"
 
 class LLogLibrary isclass Library {
 
-    public void AddListener(LLogListener listener, string scope, int minLogLevel);
+    public void AddListener(LLogListener listener, string scope, int maxLogLevel);
     public void SetFilter(LLogListener listener, LLogFilter filter);
 
 
@@ -47,9 +47,9 @@ class LLogLibrary isclass Library {
         return listeners[i];
     }
 
-    public void AddListener(LLogListener listener, string scope, int minLogLevel)
+    public void AddListener(LLogListener listener, string scope, int maxLogLevel)
     {
-        rootScope.GetScope(scope).AddListener(GetListenerData(listener), minLogLevel);
+        rootScope.GetScope(scope).AddListener(GetListenerData(listener), maxLogLevel);
     }
 
     public void SetFilter(LLogListener listener, LLogFilter filter)

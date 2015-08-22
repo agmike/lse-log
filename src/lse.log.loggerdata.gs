@@ -23,7 +23,7 @@ final class LLoggerData isclass GSObject
 
     public bool Log(int level)
     {
-        if (level >= scope.MinimumLogLevel) {
+        if (level <= scope.MaxLogLevel) {
             LLogLibraryStatic.GetInstance().PrepareMessage(level, scope, scopeName);
             return true;
         }
