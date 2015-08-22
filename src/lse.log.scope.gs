@@ -13,9 +13,31 @@ class LLogScope isclass GSObject
 
     public LLogListenerData[] Listeners = null;
 
-    public void AddListener(LLogListenerData listener, int maxLogLevel)
+    final LLogScope CreateChild(string scopeName)
+    {
+        LLogScope child = new LLogScope();
+        child.Name = scopeName;
+        child.Parent = me;
+        child.MaxLogLevel = MaxLogLevel;
+        return child;
+    }
+
+    final void SetMaxLevel(int maxLogLevel)
     {
         MaxLogLevel = Math.Max(MaxLogLevel, maxLogLevel);
+        if (Exact)
+            Exact.MaxLogLevel = MaxLogLevel;
+        if (Children) {
+            int i;
+            for (i = 0; i < Children.size(); ++i) {
+                Children[i].SetMaxLevel(MaxLogLevel);
+            }
+        }
+    }
+
+    public void AddListener(LLogListenerData listener, int maxLogLevel)
+    {
+        SetMaxLevel(maxLogLevel);
         if (!Listeners) {
             Listeners = new LLogListenerData[1];
             Listeners[0] = listener;
@@ -33,7 +55,7 @@ class LLogScope isclass GSObject
     {
         if (scope == "") {
             if (!Exact)
-                Exact = new LLogScope();
+                Exact = CreateChild(null);
             return Exact;
         }
         if (scope == "*")
@@ -43,7 +65,7 @@ class LLogScope isclass GSObject
         int i = Str.Find(scope, ".", 0);
         if (i >= 0) {
             subScope = scope[0, i];
-            scope = scope[i, ];
+            scope = scope[i + 1, ];
         }
         else
             scope = "";
@@ -60,8 +82,7 @@ class LLogScope isclass GSObject
             Children = new LLogScope[1];
         }
 
-        Children[i] = new LLogScope();
-        Children[i].Name = subScope;
+        Children[i] = CreateChild(subScope);
         return Children[i].GetScope(scope);
     }
 };

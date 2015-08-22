@@ -65,10 +65,8 @@ class LLogLibrary isclass Library {
         return data;
     }
 
-    public void FlushMessage()
+    public void EndLogMessage()
     {
-        ClearMessages("LseLogLibrary-298469", "FlushMessage");
-
         if (!nextMessage)
             return;
 
@@ -78,7 +76,7 @@ class LLogLibrary isclass Library {
         nextMessageScope = null;
 
         int mark = ++listenerVisitMark;
-        while (true) {
+        while (scope) {
             int i;
             if (scope.Listeners) {
                 for (i = 0; i < scope.Listeners.size(); ++i) {
@@ -99,9 +97,9 @@ class LLogLibrary isclass Library {
         record.Data = null;
     }
 
-    public void PrepareMessage(int level, LLogScope scope, string scopeName)
+    public LLogRecord BeginLogMessage(int level, LLogScope scope, string scopeName)
     {
-        FlushMessage();
+        EndLogMessage();
 
         nextMessageScope = scope;
         nextMessage = new LLogRecord();
@@ -111,7 +109,8 @@ class LLogLibrary isclass Library {
         nextMessage.Message = "";
         nextMessage.Data = null;
 
-        PostMessage(me, "LseLogLibrary-298469", "FlushMessage", 0.0);
+        PostMessage(me, "LseLogLibrary-298469", "EndLogMessage", 0.0);
+        return nextMessage;
     }
 
     public Soup GetProperties()
@@ -124,9 +123,9 @@ class LLogLibrary isclass Library {
         inherited(sp);
     }
 
-    void OnFlushMessage(Message msg)
+    void OnEndLogMessage(Message msg)
     {
-        FlushMessage();
+        EndLogMessage();
     }
 
     public void Init(Asset asset) {
@@ -135,6 +134,6 @@ class LLogLibrary isclass Library {
         rootScope = new LLogScope();
         listeners = new LLogListenerData[0];
 
-        AddHandler(me, "LseLogLibrary-298469", "FlushMessage", "OnFlushMessage");
+        AddHandler(me, "LseLogLibrary-298469", "EndLogMessage", "OnEndLogMessage");
     }
 };

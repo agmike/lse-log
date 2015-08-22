@@ -10,18 +10,15 @@ include "lse.log.gs"
         (code)
         static class MyClassLogger isclass LLogger
         {
-            public string GetScope()
-            {
-                return "mypackage.myclass"
-            }
+            string S() { return "mypackage.myclass" }
         };
 
         class MyPackageMyClass {
             // some function:
             if (MyClassLogger.Warn()) {
-                MyClassLogger.Log("this is warning");
-                MyClassLogger.Log("values:");
-                MyClassLogger.Log(valueSoup);
+                MyClassLogger.P("this is warning")
+                             .P("values:")
+                             .Log(valueSoup);
             }
 
         }
@@ -84,6 +81,7 @@ class LLogger isclass GSObject
         more listeners.
 
         Trace - Does this TRACE log level.
+        Debug - Does this DEBUG log level.
         Info - Does this INFO log level.
         Warn - Does this WARN log level.
         Error - Does this ERROR log level.
@@ -96,6 +94,7 @@ class LLogger isclass GSObject
             <Log Levels>, <Log>
     */
     final public bool Trace();
+    final public bool Debug();
     final public bool Info();
     final public bool Warn();
     final public bool Error();
@@ -128,12 +127,14 @@ class LLogger isclass GSObject
 
     LLogLibrary lib = LLogLibraryStatic.GetInstance();
     LLoggerData data = LLogLibraryStatic.GetInstance().InitLogger(S());
+
     LLogRecord record;
 
-    final public bool Trace() { return data.Log(TRACE); }
-    final public bool Info()  { return data.Log(INFO ); }
-    final public bool Warn()  { return data.Log(WARN ); }
-    final public bool Error() { return data.Log(ERROR); }
+    final public bool Trace() { return (record = data.BeginLogMessage(TRACE)) != null; }
+    final public bool Debug() { return (record = data.BeginLogMessage(DEBUG)) != null; }
+    final public bool Info()  { return (record = data.BeginLogMessage(INFO )) != null; }
+    final public bool Warn()  { return (record = data.BeginLogMessage(WARN )) != null; }
+    final public bool Error() { return (record = data.BeginLogMessage(ERROR)) != null; }
 
     final public LLogger P(string message)
     {
@@ -155,6 +156,6 @@ class LLogger isclass GSObject
     final public void F()
     {
         record = null;
-        LLogLibraryStatic.GetInstance().FlushMessage();
+        data.EndLogMessage();
     }
 };

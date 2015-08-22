@@ -14,6 +14,7 @@ final class LLoggerData isclass GSObject
             while (true) { /* terminate */  }
         }
         me.scope = scope;
+        me.scopeName = scopeName;
     }
 
     public string GetScopeName()
@@ -21,12 +22,16 @@ final class LLoggerData isclass GSObject
         return Str.CloneString(scopeName);
     }
 
-    public bool Log(int level)
+    public LLogRecord BeginLogMessage(int level)
     {
         if (level <= scope.MaxLogLevel) {
-            LLogLibraryStatic.GetInstance().PrepareMessage(level, scope, scopeName);
-            return true;
+            return LLogLibraryStatic.GetInstance().BeginLogMessage(level, scope, scopeName);
         }
-        return false;
+        return null;
+    }
+
+    public void EndLogMessage()
+    {
+        LLogLibraryStatic.GetInstance().EndLogMessage();
     }
 };
