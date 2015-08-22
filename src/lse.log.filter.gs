@@ -5,7 +5,7 @@ include "lse.log.gs"
 class LLogFilter isclass GSObject
 {
     // Checks if given LLogRecord satisfies this filter.
-    public bool Accepts(LLogRecord record);
+    public bool Test(LLogRecord record);
 
     // ****************************************************
     //
@@ -13,7 +13,7 @@ class LLogFilter isclass GSObject
     //
     // ****************************************************
 
-    public bool Accepts(LLogRecord record)
+    public bool Test(LLogRecord record)
     {
         return true;
     }

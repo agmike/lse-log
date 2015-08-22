@@ -3,11 +3,11 @@ include "library.gs"
 
 include "lse.log.gs"
 include "lse.log.filter.gs"
+include "lse.log.listener.gs"
+include "lse.log.listenerdata.gs"
 include "lse.log.logger.gs"
 include "lse.log.loggerdata.gs"
-include "lse.log.loglistener.gs"
-include "lse.log.loglistenerdata.gs"
-include "lse.log.logrecord.gs"
+include "lse.log.record.gs"
 include "lse.log.scope.gs"
 
 include "lse.log.static.gs"
@@ -85,7 +85,7 @@ class LLogLibrary isclass Library {
                     LLogListenerData listener = scope.Listeners[i];
                     if (listener.Mark != mark) {
                         listener.Mark = mark;
-                        if (!listener.Filter or listener.Filter.Accepts(record))
+                        if (!listener.Filter or listener.Filter.Test(record))
                             listener.Listener.Accept(record);
                     }
                 }
