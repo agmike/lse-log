@@ -4,14 +4,19 @@ include "library.gs"
 include "lse.log.gs"
 include "lse.log.filter.gs"
 include "lse.log.formatter.gs"
+include "lse.log.logger.gs"
 include "lse.log.loglistener.gs"
 include "lse.log.logrecord.gs"
 include "lse.log.subscription.gs"
 
-include "lse.log.librarystatic.gs"
+include "lse.log.static.gs"
 
 
 class LLogLibrary isclass Library {
+
+    public void AddLogger(LLog logger);
+    public void Subscribe(LLogListener listener, string scope, int minLogLevel);
+    public void Unsubscribe(LLogListener listener, string scope);
 
 
     // ****************************************************
@@ -21,14 +26,17 @@ class LLogLibrary isclass Library {
     // ****************************************************
 
     LLog[] loggers = new LLog[50];
+    LLogListener[] listeners = new LLogListener[50];
 
     public void AddLogger(LLog logger)
     {
+        Interface.Log("adding logger");
         loggers[loggers.size()] = logger;
     }
 
     public void Subscribe(LLogListener listener, string scope, int minLogLevel)
     {
+        Interface.Log("adding subscription");
         int i;
         for (i = 0; i < loggers.size(); ++i) {
             LLog logger = loggers[i];

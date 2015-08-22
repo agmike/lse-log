@@ -21,7 +21,7 @@ static class LLogLibraryStatic
     KUID GetKuid()
     {
         Soup sp = Constructors.NewSoup();
-        sp.SetNamedTag("kuid", "<kuid:298469:1000001>");
+        sp.SetNamedTag("kuid", "<kuid:298469:1000006>");
         return sp.GetNamedTagAsKUID("kuid");
     }
 
