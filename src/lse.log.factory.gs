@@ -24,7 +24,7 @@ static class LLogFactory
 
             <LLog> instance with given scope.
     */
-    final public LLog CreateLogger(string scope);
+    final public LLogger CreateLogger(string scope);
 
 
     // ****************************************************
@@ -32,9 +32,9 @@ static class LLogFactory
     //    I M P L E M E N T A T I O N
     //
     // ****************************************************
-    
 
-    final public LLog CreateLogger(string scope)
+
+    final public LLogger CreateLogger(string scope)
     {
         return null;
     }

@@ -1,5 +1,5 @@
 
-include "lse.log.library.gs"
+include "lse.log.gs"
 
 /*  Class: LLogger
 

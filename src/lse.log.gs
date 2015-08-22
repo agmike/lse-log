@@ -14,7 +14,7 @@ include "lse.log.static.gs"
 
 class LLogLibrary isclass Library {
 
-    public void AddLogger(LLog logger);
+    public void AddLogger(LLogger logger);
     public void Subscribe(LLogListener listener, string scope, int minLogLevel);
     public void Unsubscribe(LLogListener listener, string scope);
 
@@ -25,10 +25,10 @@ class LLogLibrary isclass Library {
     //
     // ****************************************************
 
-    LLog[] loggers = new LLog[50];
+    LLogger[] loggers = new LLogger[50];
     LLogListener[] listeners = new LLogListener[50];
 
-    public void AddLogger(LLog logger)
+    public void AddLogger(LLogger logger)
     {
         Interface.Log("adding logger");
         loggers[loggers.size()] = logger;
@@ -39,7 +39,7 @@ class LLogLibrary isclass Library {
         Interface.Log("adding subscription");
         int i;
         for (i = 0; i < loggers.size(); ++i) {
-            LLog logger = loggers[i];
+            LLogger logger = loggers[i];
             if (LLogLibraryStatic.ScopeMatches(logger.GetScope(), scope)) {
 
                 // Adding listener to logger subscriptions
@@ -68,7 +68,7 @@ class LLogLibrary isclass Library {
                 subscription.MinimumLogLevel = minLogLevel;
 
                 // Updating logger minimum log level
-                logger.MinimumLogLevel = LLog.NONE;
+                logger.MinimumLogLevel = LLogger.NONE;
                 int j;
                 for (j = 0; j < logger.Subscriptions.size(); ++j) {
                     LLogSubscription sub = logger.Subscriptions[j];
@@ -82,7 +82,7 @@ class LLogLibrary isclass Library {
     {
         int i;
         for (i = 0; i < loggers.size(); ++i) {
-            LLog logger = loggers[i];
+            LLogger logger = loggers[i];
             if (LLogLibraryStatic.ScopeMatches(logger.GetScope(), scope)) {
 
                 // Removing listener from logger subscriptions
@@ -96,7 +96,7 @@ class LLogLibrary isclass Library {
                 }
 
                 // Updating logger minimum log level
-                logger.MinimumLogLevel = LLog.NONE;
+                logger.MinimumLogLevel = LLogger.NONE;
                 for (j = 0; j < logger.Subscriptions.size(); ++j) {
                     LLogSubscription sub = logger.Subscriptions[j];
                     logger.MinimumLogLevel = Math.Min(logger.MinimumLogLevel, sub.MinimumLogLevel);

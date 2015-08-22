@@ -1,7 +1,7 @@
 ﻿
 kuid                                    <kuid:298469:1000006>
 username                                "LSE Log Library"
-script                                  "lse.log.library.gs"
+script                                  "lse.log.gs"
 class                                   "LLogLibrary"
 description                             "Logging facade for GameScript libraries"
 trainz-build                            3.4

@@ -17,10 +17,10 @@ class LLogFormatter isclass GSObject
     {
         string type = "UNDEF";
         switch (record.Level) {
-            case LLog.TRACE: type = "TRACE"; break;
-            case LLog.INFO:  type = " INFO"; break;
-            case LLog.WARN:  type = " WARN"; break;
-            case LLog.ERROR: type = "ERROR"; break;
+            case LLogger.TRACE: type = "TRACE"; break;
+            case LLogger.INFO:  type = " INFO"; break;
+            case LLogger.WARN:  type = " WARN"; break;
+            case LLogger.ERROR: type = "ERROR"; break;
             default:
                 break;
         }
