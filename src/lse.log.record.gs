@@ -8,6 +8,7 @@ class LLogRecord isclass GSObject
     public string Scope;
     public GameObject Source;
     public float Time;
+    public int FrameId;
     public string Message;
     public Soup Data;
 };

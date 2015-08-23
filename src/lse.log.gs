@@ -38,6 +38,19 @@ class LLogLibrary isclass Library {
 
     LLogListenerData[] listeners;
 
+    int frameIdCounter = 0;
+    float lastFrameTime = -1.0;
+
+    public int GetFrameId()
+    {
+        float time = World.GetSeconds();
+        if (time != lastFrameTime) {
+            lastFrameTime = time;
+            ++frameIdCounter;
+        }
+        return frameIdCounter;
+    }
+
     final LLogListenerData GetListenerData(LLogListener listener)
     {
         int i;

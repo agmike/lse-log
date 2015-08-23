@@ -21,11 +21,13 @@ final class LLoggerData isclass GSObject
     {
         LLogRecord nextMessage = null;
         if (level <= scope.MaxLogLevel) {
+            LLogLibrary lib = LLogLibraryStatic.GetInstance();
             nextMessage = new LLogRecord();
             nextMessage.Level = level;
             nextMessage.Scope = Str.CloneString(scopeName);
             nextMessage.Source = Router.GetCurrentThreadGameObject();
             nextMessage.Time = World.GetSeconds();
+            nextMessage.FrameId = lib.GetFrameId();
             nextMessage.Message = "";
             nextMessage.Data = null;
             LLogLibraryStatic.GetInstance().Log(nextMessage);
