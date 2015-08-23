@@ -15,7 +15,10 @@ include "lse.log.static.gs"
 
 class LLogLibrary isclass Library {
 
-    public void AddListener(LLogListener listener, string scope, int maxLogLevel);
+    public void SetListener(LLogListener listener, string scope);
+    public void SetListener(LLogListener listener, string scope, int maxLogLevel);
+    public void SetListener(LLogListener listener, string scope, int maxLogLevel, LLogFilter filter);
+    public void SetMaxLogLevel(LLogListener listener, int level);
     public void SetFilter(LLogListener listener, LLogFilter filter);
 
 
@@ -27,8 +30,9 @@ class LLogLibrary isclass Library {
 
     LLogScope rootScope;
 
-    LLogRecord nextMessage = null;
-    LLogScope nextMessageScope = null;
+    LLogRecord[] messageQueue = new LLogRecord[10];
+    int messageQueueStart = 0, messageQueueEnd = 0, messageQueueCount = 0;
+    bool flushScheduled = false;
 
     int listenerVisitMark = 0;
 
@@ -47,9 +51,30 @@ class LLogLibrary isclass Library {
         return listeners[i];
     }
 
-    public void AddListener(LLogListener listener, string scope, int maxLogLevel)
+    public void SetListener(LLogListener listener, string scope)
     {
-        rootScope.GetScope(scope).AddListener(GetListenerData(listener), maxLogLevel);
+        rootScope.GetScope(scope).AddListener(GetListenerData(listener));
+    }
+
+    public void SetListener(LLogListener listener, string scope, int maxLogLevel)
+    {
+        LLogListenerData data = GetListenerData(listener);
+        data.MaxLogLevel = maxLogLevel;
+        rootScope.GetScope(scope).AddListener(data);
+    }
+
+    public void SetListener(LLogListener listener, string scope, int maxLogLevel, LLogFilter filter)
+    {
+        LLogListenerData data = GetListenerData(listener);
+        data.MaxLogLevel = maxLogLevel;
+        data.Filter = filter;
+        rootScope.GetScope(scope).AddListener(data);
+    }
+
+    public void SetMaxLogLevel(LLogListener listener, int level)
+    {
+        GetListenerData(listener).MaxLogLevel = level;
+        rootScope.UpdateMaxLogLevel(LLogger.NONE);
     }
 
     public void SetFilter(LLogListener listener, LLogFilter filter)
@@ -65,52 +90,77 @@ class LLogLibrary isclass Library {
         return data;
     }
 
-    public void EndLogMessage()
+    final void ProcessMessage(LLogRecord msg)
     {
-        if (!nextMessage)
-            return;
-
-        LLogRecord record = nextMessage;
-        nextMessage = null;
-        LLogScope scope = nextMessageScope;
-        nextMessageScope = null;
-
+        LLogScope scope = rootScope.GetScope(msg.Scope);
         int mark = ++listenerVisitMark;
         while (scope) {
             int i;
             if (scope.Listeners) {
                 for (i = 0; i < scope.Listeners.size(); ++i) {
                     LLogListenerData listener = scope.Listeners[i];
-                    if (listener.Mark != mark) {
+                    if (msg.Level <= listener.MaxLogLevel and listener.Mark != mark) {
                         listener.Mark = mark;
-                        if (!listener.Filter or listener.Filter.Test(record))
-                            listener.Listener.Accept(record);
+                        if (!listener.Filter or listener.Filter.Test(msg))
+                            listener.Listener.Accept(msg);
                     }
                 }
             }
             scope = scope.Parent;
         }
-
-        record.Scope = null;
-        record.Source = null;
-        record.Message = null;
-        record.Data = null;
     }
 
-    public LLogRecord BeginLogMessage(int level, LLogScope scope, string scopeName)
+    final void FlushLog()
     {
-        EndLogMessage();
+        flushScheduled = false;
 
-        nextMessageScope = scope;
-        nextMessage = new LLogRecord();
-        nextMessage.Level = level;
-        nextMessage.Scope = Str.CloneString(scopeName);
-        nextMessage.Source = Router.GetCurrentThreadGameObject();
-        nextMessage.Message = "";
-        nextMessage.Data = null;
+        while (messageQueueCount > 0) {
+            LLogRecord msg = messageQueue[messageQueueEnd];
+            messageQueue[messageQueueEnd] = null;
+            messageQueueEnd = (messageQueueEnd + 1) % messageQueue.size();
+            messageQueueCount = messageQueueCount - 1;
+            ProcessMessage(msg);
+        }
 
-        PostMessage(me, "LseLogLibrary-298469", "EndLogMessage", 0.0);
-        return nextMessage;
+        if (messageQueueEnd == messageQueueStart)
+            messageQueueEnd = messageQueueStart = 0;
+    }
+
+    public void Log(LLogRecord msg)
+    {
+        if (messageQueueCount >= messageQueue.size()) {
+            LLogRecord[] newQueue = new LLogRecord[messageQueueCount * 2];
+
+            int firstPartCount = messageQueueCount - messageQueueEnd;
+            newQueue[0, firstPartCount] = messageQueue[messageQueueEnd, ];
+            newQueue[firstPartCount, messageQueueCount] = messageQueue[0, messageQueueStart];
+
+            messageQueueEnd = 0;
+            messageQueueStart = messageQueueCount;
+            messageQueue = newQueue;
+        }
+        messageQueue[messageQueueStart] = msg;
+        ++messageQueueCount;
+        messageQueueStart = (messageQueueStart + 1) % messageQueue.size();
+
+        if (!flushScheduled) {
+            PostMessage(me, "LseLogLibrary-298469", "Flush", 0.0);
+            flushScheduled = true;
+        }
+    }
+
+    void OnFlush(Message msg)
+    {
+        FlushLog();
+    }
+
+    public void Init(Asset asset) {
+        inherited(asset);
+
+        rootScope = new LLogScope();
+        listeners = new LLogListenerData[0];
+
+        AddHandler(me, "LseLogLibrary-298469", "Flush", "OnFlush");
     }
 
     public Soup GetProperties()
@@ -121,19 +171,5 @@ class LLogLibrary isclass Library {
     public void SetProperties(Soup sp)
     {
         inherited(sp);
-    }
-
-    void OnEndLogMessage(Message msg)
-    {
-        EndLogMessage();
-    }
-
-    public void Init(Asset asset) {
-        inherited(asset);
-
-        rootScope = new LLogScope();
-        listeners = new LLogListenerData[0];
-
-        AddHandler(me, "LseLogLibrary-298469", "EndLogMessage", "OnEndLogMessage");
     }
 };

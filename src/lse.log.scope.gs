@@ -22,22 +22,40 @@ class LLogScope isclass GSObject
         return child;
     }
 
-    final void SetMaxLevel(int maxLogLevel)
+    final void SetMaxLogLevel(int maxLogLevel)
     {
-        MaxLogLevel = Math.Max(MaxLogLevel, maxLogLevel);
+        if (MaxLogLevel == maxLogLevel)
+            return;
+        MaxLogLevel = maxLogLevel;
         if (Exact)
             Exact.MaxLogLevel = MaxLogLevel;
         if (Children) {
             int i;
             for (i = 0; i < Children.size(); ++i) {
-                Children[i].SetMaxLevel(MaxLogLevel);
+                Children[i].SetMaxLogLevel(MaxLogLevel);
             }
         }
     }
 
-    public void AddListener(LLogListenerData listener, int maxLogLevel)
+    public void UpdateMaxLogLevel(int parentMaxLogLevel)
     {
-        SetMaxLevel(maxLogLevel);
+        int maxLogLevel = parentMaxLogLevel;
+        if (Listeners) {
+            int i;
+            for (i = 0; i < Listeners.size(); ++i)
+                MaxLogLevel = Math.Max(MaxLogLevel, Listeners[i].MaxLogLevel);
+        }
+        if (Exact and Exact.Listeners) {
+            int i;
+            for (i = 0; i < Exact.Listeners.size(); ++i)
+                MaxLogLevel = Math.Max(MaxLogLevel, Exact.Listeners[i].MaxLogLevel);
+        }
+        SetMaxLogLevel(maxLogLevel);
+    }
+
+    public void AddListener(LLogListenerData listener)
+    {
+        SetMaxLogLevel(Math.Max(MaxLogLevel, listener.MaxLogLevel));
         if (!Listeners) {
             Listeners = new LLogListenerData[1];
             Listeners[0] = listener;

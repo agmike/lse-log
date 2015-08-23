@@ -18,7 +18,7 @@ include "lse.log.gs"
             if (MyClassLogger.Warn()) {
                 MyClassLogger.P("this is warning")
                              .P("values:")
-                             .Log(valueSoup);
+                             .P(valueSoup);
             }
 
         }
@@ -99,6 +99,10 @@ class LLogger isclass GSObject
     final public bool Warn();
     final public bool Error();
 
+    /// Returns true if logger is recording a message. Useful when function wants to continue
+    // logging to same message.
+    final public bool Log();
+
     /*  Func: Log
 
         Logs provided message, arguments and data to all listeners subscribed
@@ -114,9 +118,6 @@ class LLogger isclass GSObject
     */
     final public LLogger P(string message);
     final public LLogger P(Soup data);
-
-    /// Finishes log message and handle it to listeners.
-    final public void F();
 
 
     // ****************************************************
@@ -136,6 +137,8 @@ class LLogger isclass GSObject
     final public bool Warn()  { return (record = data.BeginLogMessage(WARN )) != null; }
     final public bool Error() { return (record = data.BeginLogMessage(ERROR)) != null; }
 
+    final public bool Log() { return record != null; }
+
     final public LLogger P(string message)
     {
         record.Message[record.Message.size(), ] = message;
@@ -151,11 +154,5 @@ class LLogger isclass GSObject
         //     LData.Append(data.MessageRecord.Data, sp);
         record.Data = sp;
         return me;
-    }
-
-    final public void F()
-    {
-        record = null;
-        data.EndLogMessage();
     }
 };

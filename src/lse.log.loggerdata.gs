@@ -17,21 +17,19 @@ final class LLoggerData isclass GSObject
         me.scopeName = scopeName;
     }
 
-    public string GetScopeName()
-    {
-        return Str.CloneString(scopeName);
-    }
-
     public LLogRecord BeginLogMessage(int level)
     {
+        LLogRecord nextMessage = null;
         if (level <= scope.MaxLogLevel) {
-            return LLogLibraryStatic.GetInstance().BeginLogMessage(level, scope, scopeName);
+            nextMessage = new LLogRecord();
+            nextMessage.Level = level;
+            nextMessage.Scope = Str.CloneString(scopeName);
+            nextMessage.Source = Router.GetCurrentThreadGameObject();
+            nextMessage.Time = World.GetSeconds();
+            nextMessage.Message = "";
+            nextMessage.Data = null;
+            LLogLibraryStatic.GetInstance().Log(nextMessage);
         }
-        return null;
-    }
-
-    public void EndLogMessage()
-    {
-        LLogLibraryStatic.GetInstance().EndLogMessage();
+        return nextMessage;
     }
 };
